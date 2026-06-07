@@ -512,6 +512,22 @@ const ADMIN_PIN = '9999';
 const QUICK_VALUES = [0,1,2,3,4,5,6,7,8,9,10];
 const getCategories = () => [...new Set(ITEMS.map(i=>i.cat))];
 
+// Load from localStorage
+function loadStorage() {
+  try {
+    const saved = localStorage.getItem('pelicana_items');
+    if(saved) ITEMS = JSON.parse(saved);
+    const savedEmail = localStorage.getItem('pelicana_email');
+    if(savedEmail) hqEmail = savedEmail;
+  } catch(e) {}
+}
+function saveItems() {
+  try { localStorage.setItem('pelicana_items', JSON.stringify(ITEMS)); } catch(e) {}
+}
+function saveEmail2() {
+  try { localStorage.setItem('pelicana_email', hqEmail); } catch(e) {}
+}
+
 let values = {};
 let hqEmail = 'fm.pelicanausa@gmail.com';
 let currentCat = getCategories()[0];
@@ -524,8 +540,10 @@ function resetValues() {
   values={};
   ITEMS.forEach((_,i)=>values[i]={box:'',pack:''});
 }
+loadStorage();
 resetValues();
 document.getElementById('invDate').value = new Date().toISOString().slice(0,10);
+document.getElementById('emailDisplay').textContent = hqEmail;
 
 // ===== PIN =====
 function openPinModal() {
@@ -637,6 +655,7 @@ function addCategory() {
   if(!name){ showToast('카테고리 이름을 입력하세요'); return; }
   if(getCategories().includes(name)){ showToast('이미 있는 카테고리예요'); return; }
   ITEMS.push({cat:name, name:'(새 아이템)', unit:'BOX'});
+  saveItems();
   input.value='';
   buildAdminPanel();
   showToast(`"${name}" 카테고리 추가됨`);
@@ -648,6 +667,7 @@ function addItem(cat) {
   const name = nameEl.value.trim();
   if(!name){ showToast('아이템 이름을 입력하세요'); return; }
   ITEMS.push({cat, name, unit: unitEl.value});
+  saveItems();
   nameEl.value='';
   buildAdminPanel();
   // Re-expand the category
@@ -659,6 +679,7 @@ function deleteItem(idx) {
   const item = ITEMS[idx];
   if(!confirm(`"${item.name}" 을(를) 삭제할까요?`)) return;
   ITEMS.splice(idx,1);
+  saveItems();
   buildAdminPanel();
   showToast('삭제되었습니다');
 }
@@ -682,6 +703,7 @@ function saveEditItem() {
   if(!name){ showToast('이름을 입력하세요'); return; }
   ITEMS[editingIdx].name = name;
   ITEMS[editingIdx].unit = unit;
+  saveItems();
   closeEditModal();
   buildAdminPanel();
   showToast('수정되었습니다');
@@ -828,7 +850,7 @@ function switchView(view) {
 // ===== EMAIL =====
 function openEmailModal(){document.getElementById('emailInput').value=hqEmail;document.getElementById('emailModal').classList.add('open');}
 function closeEmailModal(){document.getElementById('emailModal').classList.remove('open');}
-function saveEmail(){const val=document.getElementById('emailInput').value.trim();if(val){hqEmail=val;document.getElementById('emailDisplay').textContent=hqEmail;showToast('이메일이 저장되었습니다');}closeEmailModal();}
+function saveEmail(){const val=document.getElementById('emailInput').value.trim();if(val){hqEmail=val;document.getElementById('emailDisplay').textContent=hqEmail;saveEmail2();showToast('이메일이 저장되었습니다');}closeEmailModal();}
 
 // ===== GUIDE + SEND =====
 function sendEmail() {
